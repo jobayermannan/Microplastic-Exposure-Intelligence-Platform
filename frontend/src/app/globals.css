@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #0A1F2E;
+  color: #EAF2F2;
+}
+
+::selection {
+  background-color: #3FBFB5;
+  color: #0A1F2E;
+}
+
+.risk-badge {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-mono uppercase tracking-wide;
+}
+.risk-badge-low { @apply bg-risk-low/15 text-risk-low border border-risk-low/30; }
+.risk-badge-medium { @apply bg-risk-medium/15 text-risk-medium border border-risk-medium/30; }
+.risk-badge-high { @apply bg-risk-high/15 text-risk-high border border-risk-high/30; }
+
+.panel {
+  @apply bg-depth-surface border border-white/5 rounded-2xl;
+}
+
+.btn-primary {
+  @apply bg-seafoam text-depth font-display font-semibold px-6 py-3 rounded-xl transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none;
+}
+
+.input-field {
+  @apply w-full bg-depth border border-white/10 rounded-xl px-4 py-3 text-ink font-body placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-seafoam/50 focus:border-seafoam/50 transition-colors;
+}
