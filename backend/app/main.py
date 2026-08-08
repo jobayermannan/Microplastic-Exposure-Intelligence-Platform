@@ -27,7 +27,20 @@ app.include_router(predict_router)
 app.include_router(auth_router)
 app.include_router(research_router)
 app.include_router(search_router)
-Base.metadata.create_all(bind=engine)
+
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("startup")
+
+@app.on_event("startup")
+def on_startup():
+    try:
+        Base.metadata.create_all(bind=engine)
+        logger.info("Database tables verified/created successfully.")
+    except Exception as e:
+        logger.error(f"Database initialization failed: {e}")
+        # Do not crash the app - let it serve /health even if DB init fails,
+        # so we can see the real error in Render logs instead of a silent timeout.
 
 @app.get("/health")
 async def health():
