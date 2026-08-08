@@ -13,6 +13,7 @@ app = FastAPI(title="Depthline API")
 origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://microplastic-exposure-intelligence-swart.vercel.app",
 ]
 
 app.add_middleware(
