@@ -10,8 +10,6 @@ pydantic-settings
 pydantic[email]
 scikit-learn
 pandas
---extra-index-url https://download.pytorch.org/whl/cpu
-torch==2.13.0+cpu
-sentence-transformers
+fastembed==0.4.2
 httpx
 python-multipart
