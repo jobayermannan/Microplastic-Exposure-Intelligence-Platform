@@ -8,7 +8,7 @@ import { AxiosError } from "axios";
  * tries to render an object/array directly (which crashes React).
  */
 export function getErrorMessage(err: unknown, fallback = "Something went wrong. Please try again."): string {
-  const axiosErr = err as AxiosError<any>;
+  const axiosErr = err as AxiosError<{ detail?: string | Array<{ loc?: string[]; msg?: string }> }>;
   const detail = axiosErr?.response?.data?.detail;
 
   if (!detail) return fallback;

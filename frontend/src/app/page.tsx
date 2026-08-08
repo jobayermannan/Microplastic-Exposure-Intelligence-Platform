@@ -26,8 +26,8 @@ export default function Home() {
       const res = await api.get("/search", { params: { q: query } });
       setAnswer(res.data.answer);
       setSources(res.data.sources);
-    } catch (err) {
-      setError("Search failed. The server may be waking up — try again in a few seconds.");
+    } catch {
+      setError("Search failed. The server may be waking up - try again in a few seconds.");
     } finally {
       setLoading(false);
     }
@@ -40,7 +40,7 @@ export default function Home() {
           Ask the depths.
         </h1>
         <p className="text-ink-muted font-body">
-          Search grounded in real research entries — every answer cites its sources, or tells you when it doesn't know.
+          Search grounded in real research entries — every answer cites its sources, or tells you when it doesn&apos;t know.
         </p>
       </div>
 
