@@ -41,6 +41,28 @@ export default function Login() {
         </p>
       </div>
 
+      {mode === "login" && (
+        <div className="panel p-4 space-y-2.5 text-xs">
+          <div className="flex items-center justify-between font-mono text-ink-muted">
+            <span className="uppercase tracking-wider text-[11px]">Demo Researcher</span>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail("demo@depthline.app");
+                setPassword("Demo1234!");
+              }}
+              className="text-seafoam font-semibold hover:underline cursor-pointer"
+            >
+              ⚡ 1-Click Auto Fill
+            </button>
+          </div>
+          <div className="font-mono text-ink space-y-1">
+            <div>Email: <span className="select-all">demo@depthline.app</span></div>
+            <div>Password: <span className="select-all">Demo1234!</span></div>
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="panel p-6 space-y-4">
         <div>
           <label className="font-mono text-xs text-ink-muted uppercase tracking-wide">Email</label>

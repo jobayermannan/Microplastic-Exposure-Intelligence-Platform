@@ -1,0 +1,15 @@
+name: Keep Render & Supabase Alive
+
+on:
+  schedule:
+    - cron: '*/14 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Depthline Backend and Supabase DB
+        run: |
+          curl -fsS --max-time 60 "https://microplastic-exposure-intelligence.onrender.com/health" || true
+          curl -fsS --max-time 60 "https://microplastic-exposure-intelligence.onrender.com/research" > /dev/null || true

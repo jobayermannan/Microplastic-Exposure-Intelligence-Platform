@@ -1,9 +1,16 @@
 "use client";
+import { useEffect } from "react";
 import Link from "next/link";
+import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 
 export default function Nav() {
   const { token, email, logout } = useAuthStore();
+
+  useEffect(() => {
+    // Pre-warm the Render backend & Supabase connection on initial visit
+    api.get("/health").catch(() => {});
+  }, []);
 
   return (
     <nav className="border-b border-white/5">

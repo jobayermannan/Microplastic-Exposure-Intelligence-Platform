@@ -4,7 +4,8 @@ from app.api.predict import router as predict_router
 from app.api.auth import router as auth_router
 from app.api.research import router as research_router
 from app.api.search import router as search_router
-from app.core.database import Base, engine
+from sqlalchemy import text
+from app.core.database import Base, engine, SessionLocal
 from app.models.user import User
 from app.models.research_entry import ResearchEntry
 
@@ -45,4 +46,10 @@ def on_startup():
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    db_status = "ok"
+    try:
+        with SessionLocal() as db:
+            db.execute(text("SELECT 1"))
+    except Exception:
+        db_status = "degraded"
+    return {"status": "ok", "database": db_status}

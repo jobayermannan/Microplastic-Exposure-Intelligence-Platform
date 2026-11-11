@@ -88,6 +88,29 @@ export default function Predict() {
         </p>
       </div>
 
+      <div className="flex flex-wrap items-center gap-2 max-w-md">
+        <span className="font-mono text-xs text-ink-muted">Sample coordinates:</span>
+        {[
+          { label: "Bay of Bengal (21.8, 90.1)", lat: "21.8", lon: "90.1", dt: "2026-05-15" },
+          { label: "North Pacific Gyre (32.5, -145.0)", lat: "32.5", lon: "-145.0", dt: "2026-06-20" },
+          { label: "Southern Ocean (-55.0, 15.0)", lat: "-55.0", lon: "15.0", dt: "2026-04-10" },
+        ].map((preset) => (
+          <button
+            key={preset.label}
+            type="button"
+            onClick={() => {
+              setLatitude(preset.lat);
+              setLongitude(preset.lon);
+              setDate(preset.dt);
+              setFieldErrors({});
+            }}
+            className="font-mono text-xs px-3 py-1 rounded-full border border-white/10 bg-white/5 text-ink-muted hover:text-seafoam hover:border-seafoam/40 transition-colors cursor-pointer"
+          >
+            {preset.label}
+          </button>
+        ))}
+      </div>
+
       <form onSubmit={handlePredict} className="panel p-6 grid gap-4 max-w-md" noValidate>
         <div>
           <label className="font-mono text-xs text-ink-muted uppercase tracking-wide">Latitude</label>
