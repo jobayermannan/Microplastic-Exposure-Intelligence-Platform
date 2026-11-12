@@ -1,12 +1,16 @@
 "use client";
-import { useState } from "react";
-import { api } from "@/lib/api";
+import { useState, useRef } from "react";
 
 interface SourceItem {
   product_name: string;
   microplastic_type: string;
   location: string | null;
   publication_link: string | null;
+}
+
+interface SearchResult {
+  answer: string;
+  sources: SourceItem[];
 }
 
 const SAMPLE_QUERIES = [
@@ -21,39 +25,35 @@ export default function Home() {
   const [sources, setSources] = useState<SourceItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const cacheRef = useRef<Record<string, SearchResult>>({});
 
   async function runSearch(searchQuery: string) {
     const trimmed = searchQuery.trim();
     if (trimmed.length < 1) return;
+
+    const cacheKey = trimmed.toLowerCase();
+    if (cacheRef.current[cacheKey]) {
+      setError(null);
+      setAnswer(cacheRef.current[cacheKey].answer);
+      setSources(cacheRef.current[cacheKey].sources);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setAnswer(null);
     try {
-      const res = await api.get("/search", {
-        params: { q: trimmed },
-        timeout: 8000,
-      });
-      if (
-        res.data?.answer &&
-        !String(res.data.answer).startsWith("All free models failed")
-      ) {
-        setAnswer(res.data.answer);
-        setSources(res.data.sources || []);
-        return;
-      }
-      throw new Error("Fallback to edge search");
+      const res = await fetch(`/api/search?q=${encodeURIComponent(trimmed)}`);
+      if (!res.ok) throw new Error("Search request failed");
+      const data: SearchResult = await res.json();
+      cacheRef.current[cacheKey] = {
+        answer: data.answer,
+        sources: data.sources || [],
+      };
+      setAnswer(data.answer);
+      setSources(data.sources || []);
     } catch {
-      try {
-        const fallbackRes = await fetch(
-          `/api/search?q=${encodeURIComponent(trimmed)}`
-        );
-        if (!fallbackRes.ok) throw new Error("Fallback failed");
-        const data = await fallbackRes.json();
-        setAnswer(data.answer);
-        setSources(data.sources || []);
-      } catch {
-        setError("Search failed. Please check your connection and try again.");
-      }
+      setError("Search failed. Please check your connection and try again.");
     } finally {
       setLoading(false);
     }

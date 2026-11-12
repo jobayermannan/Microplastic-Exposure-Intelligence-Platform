@@ -11,6 +11,17 @@ router = APIRouter()
 @router.get("/search", response_model=SearchResponse)
 def search(q: str = Query(..., min_length=1), db: Session = Depends(get_db)):
     entries = search_similar_entries(db, q, top_k=5)
+    if not entries:
+        return {
+            "answer": (
+                f'No peer-reviewed studies in the Depthline database match "{q}". '
+                "Try searching for a specific product, polymer, or environment — such as "
+                "bottled water, PET, table salt, seafood, fish, wastewater effluent, tap water, "
+                "human blood, tea bags, or toothpaste."
+            ),
+            "sources": [],
+        }
+
     answer = generate_answer(q, entries)
 
     sources = [
