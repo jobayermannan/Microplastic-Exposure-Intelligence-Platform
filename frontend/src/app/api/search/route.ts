@@ -187,17 +187,20 @@ function findMatchingStudies(query: string, maxResults = 5): StudyEntry[] {
     const methodLower = s.detection_method.toLowerCase();
 
     for (const t of specific) {
-      const exactKeyword = s.keywords.some((k) => k === t || (t.length >= 3 && (k.startsWith(t) || t.startsWith(k))));
-      const inProd = prodLower.includes(t);
-      const inType = typeLower.includes(t);
-      const inLoc = locLower.includes(t);
-      const inMethod = methodLower.includes(t);
+      const exactKeyword = s.keywords.some(
+        (k) => k === t || k === `${t}s` || t === `${k}s` || (t.length >= 5 && k.length >= 5 && (k.startsWith(t) || t.startsWith(k)))
+      );
+      const wordRegex = new RegExp(`\\b${t}s?\\b`, "i");
+      const inProd = wordRegex.test(prodLower);
+      const inType = wordRegex.test(typeLower);
+      const inLoc = wordRegex.test(locLower);
+      const inMethod = wordRegex.test(methodLower);
 
-      if (inProd && t.length >= 3) score += 8;
-      if (inType && t.length >= 2) score += 6;
-      if (exactKeyword) score += 5;
-      if (inLoc && t.length >= 3) score += 4;
-      if (inMethod && t.length >= 3) score += 3;
+      if (inProd) score += 10;
+      if (inType) score += 6;
+      if (exactKeyword) score += 6;
+      if (inLoc) score += 4;
+      if (inMethod) score += 3;
     }
 
     return { study: s, score };
@@ -205,14 +208,14 @@ function findMatchingStudies(query: string, maxResults = 5): StudyEntry[] {
 
   // Require a minimum relevance score so unrelated queries (e.g. "hlw", "hello", "bitcoin") never match
   const relevant = scored
-    .filter((item) => item.score >= 4)
+    .filter((item) => item.score >= 5)
     .sort((a, b) => b.score - a.score);
 
-  // If multiple studies matched, filter out very weak partial matches (< 35% of top score)
+  // Keep only strong matches (>= 55% of top score) so secondary keyword overlaps don't pollute specific product searches
   if (relevant.length > 0) {
     const topScore = relevant[0].score;
     return relevant
-      .filter((item) => item.score >= Math.max(4, topScore * 0.4))
+      .filter((item) => item.score >= Math.max(5, topScore * 0.55))
       .slice(0, maxResults)
       .map((item) => item.study);
   }
