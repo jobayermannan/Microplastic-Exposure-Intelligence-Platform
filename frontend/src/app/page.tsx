@@ -23,16 +23,37 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
 
   async function runSearch(searchQuery: string) {
-    if (searchQuery.trim().length < 2) return;
+    const trimmed = searchQuery.trim();
+    if (trimmed.length < 1) return;
     setLoading(true);
     setError(null);
     setAnswer(null);
     try {
-      const res = await api.get("/search", { params: { q: searchQuery } });
-      setAnswer(res.data.answer);
-      setSources(res.data.sources);
+      const res = await api.get("/search", {
+        params: { q: trimmed },
+        timeout: 8000,
+      });
+      if (
+        res.data?.answer &&
+        !String(res.data.answer).startsWith("All free models failed")
+      ) {
+        setAnswer(res.data.answer);
+        setSources(res.data.sources || []);
+        return;
+      }
+      throw new Error("Fallback to edge search");
     } catch {
-      setError("Search failed. The server may be waking up - try again in a few seconds.");
+      try {
+        const fallbackRes = await fetch(
+          `/api/search?q=${encodeURIComponent(trimmed)}`
+        );
+        if (!fallbackRes.ok) throw new Error("Fallback failed");
+        const data = await fallbackRes.json();
+        setAnswer(data.answer);
+        setSources(data.sources || []);
+      } catch {
+        setError("Search failed. Please check your connection and try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -90,7 +111,7 @@ export default function Home() {
 
       {answer && (
         <div className="panel p-6 space-y-4">
-          <p className="text-ink font-body leading-relaxed">{answer}</p>
+          <p className="text-ink font-body leading-relaxed whitespace-pre-line">{answer}</p>
           {sources.length > 0 && (
             <div className="pt-4 border-t border-white/5 space-y-2">
               <p className="font-mono text-xs text-ink-muted uppercase tracking-wide">Sources</p>

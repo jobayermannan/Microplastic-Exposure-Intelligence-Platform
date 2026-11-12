@@ -68,33 +68,59 @@ def _call_model(model_id: str, system_prompt: str, user_prompt: str) -> str:
     return data["choices"][0]["message"]["content"]
 
 
+def _synthesize_fallback_answer(query: str, entries) -> str:
+    if not entries:
+        return "No matching research entries were found in the database for your query."
+
+    q_words = [w.lower() for w in query.replace("?", " ").replace(",", " ").split() if len(w) > 2]
+    matched = []
+    for i, e in enumerate(entries, 1):
+        blob = f"{e.product_name} {e.microplastic_type} {e.location or ''} {e.detection_method or ''}".lower()
+        if any(w in blob for w in q_words):
+            matched.append((i, e))
+
+    target = matched if matched else [(i, e) for i, e in enumerate(entries[:3], 1)]
+    parts = []
+    for idx, e in target[:4]:
+        conc = f" at a reported concentration of {e.concentration}" if e.concentration is not None else ""
+        loc = f" ({e.location})" if e.location else ""
+        method = f" detected via {e.detection_method}" if e.detection_method else ""
+        parts.append(f"• {e.product_name}{loc}: {e.microplastic_type}{conc}{method} [{idx}].")
+
+    header = (
+        f"Based on the peer-reviewed studies in the Depthline database matching \"{query}\":"
+        if matched
+        else f"Closest peer-reviewed findings in the Depthline database related to \"{query}\":"
+    )
+    return header + "\n\n" + "\n".join(parts)
+
+
 def generate_answer(query: str, entries) -> str:
+    if not entries:
+        return "No matching research entries found in the database."
+
     context = build_context(entries)
 
     system_prompt = (
-        "You are an environmental health assistant. Answer the user's question "
-        "using ONLY the research entries provided below. Cite entries by their "
-        "[number] when you use them. If the entries don't contain enough "
-        "information to answer confidently, say so clearly instead of guessing."
+        "You are an environmental health research assistant for Depthline. Answer the user's "
+        "question clearly and concisely using ONLY the research entries provided below. "
+        "If the user types a short keyword or topic (e.g., 'seafood', 'water', 'salt', 'wastewater'), "
+        "summarize all relevant findings from the provided entries. Always cite entries by their "
+        "[number] (e.g., [1], [2]). Keep the tone scientific, helpful, and direct."
     )
-    user_prompt = f"Research entries:\n{context}\n\nUser question: {query}"
+    user_prompt = f"Research entries:\n{context}\n\nUser query: {query}"
 
     if not settings.OPENROUTER_API_KEY:
-        return "OpenRouter API key not configured. Set OPENROUTER_API_KEY in .env."
+        return _synthesize_fallback_answer(query, entries)
 
     candidates = get_free_model_list()
     if not candidates:
-        return "No free OpenRouter models are currently available. Try again shortly."
+        return _synthesize_fallback_answer(query, entries)
 
-    last_error = None
-    for model_id in candidates[:5]:  # cap attempts so a bad run doesn't hang forever
+    for model_id in candidates[:3]:
         try:
             return _call_model(model_id, system_prompt, user_prompt)
-        except httpx.HTTPStatusError as e:
-            last_error = f"{model_id} -> {e.response.status_code}"
-            continue
-        except Exception as e:
-            last_error = f"{model_id} -> {str(e)}"
+        except Exception:
             continue
 
-    return f"All free models failed. Last error: {last_error}"
+    return _synthesize_fallback_answer(query, entries)

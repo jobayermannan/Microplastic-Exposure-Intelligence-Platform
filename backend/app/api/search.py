@@ -9,7 +9,7 @@ router = APIRouter()
 
 
 @router.get("/search", response_model=SearchResponse)
-def search(q: str = Query(..., min_length=2), db: Session = Depends(get_db)):
+def search(q: str = Query(..., min_length=1), db: Session = Depends(get_db)):
     entries = search_similar_entries(db, q, top_k=5)
     answer = generate_answer(q, entries)
 
